@@ -99,3 +99,61 @@ class NQueensProblem(Problem):
             return False
         return not any(self.conflicted(state, state[col], col)
                        for col in range(len(state)))
+
+import numpy as np
+
+class EightPuzzleProblem(Problem):
+    
+    def __init__(self, initial):
+        self.initial = np.array(initial)
+        self.goal = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+    
+    def actions(self, state):
+                
+        possible_actions = []
+        
+        # find where zero is
+        x, y = np.where(state == 0) # not that np.where returns all locations that has zero; so x and y are arrays
+        x = x[0]
+        y = y[0]
+        if x > 0:
+            possible_actions.append('L')
+        if x < 2:
+            possible_actions.append('R')
+        if y > 0:
+            possible_actions.append('U')
+        if y < 2:
+            possible_actions.append('D')
+        
+        return possible_actions
+    
+    def result(self, state, action):
+        # find where zero is
+        x, y = np.where(state == 0) # not that np.where returns all locations that has zero; so x and y are arrays
+        x = x[0]
+        y = y[0]
+        new_state = np.copy(state)
+        # assume the actions are all legal
+        if action == 'L':
+            replace_val = new_state[x-1, y]
+            new_state[x-1, y] = 0
+            new_state[x, y] = replace_val
+        elif action == 'R':
+            replace_val = new_state[x+1, y]
+            new_state[x+1, y] = 0
+            new_state[x, y] = replace_val
+        elif action == 'U':
+            replace_val = new_state[x, y-1]
+            new_state[x, y-1] = 0
+            new_state[x, y] = replace_val
+        elif action == 'D':
+            replace_val = new_state[x, y+1]
+            new_state[x, y+1] = 0
+            new_state[x, y] = replace_val
+        
+        return new_state
+    
+    def goal_test(self, state):
+        return np.all(state == self.goal)
+    
+    
