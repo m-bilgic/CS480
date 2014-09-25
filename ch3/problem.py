@@ -102,18 +102,44 @@ class NQueensProblem(Problem):
 
 import numpy as np
 
+
+def misplaced_tiles_heuristic(node):
+    state = node.state.arr
+    goal = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+    num_misplaced_tiles = np.sum(state != goal)
+    # do not count the blank (0) tile
+    if state[0,0] != 0:
+        num_misplaced_tiles -= 1
+    return num_misplaced_tiles
+
+import hashlib as hl
+
+class HashableNDArray():
+    
+    def __init__(self, arr):
+        self.arr = arr
+    
+    def __eq__(self, other):
+        return isinstance(other, HashableNDArray) and np.all(self.arr == other.arr)
+    
+    def __hash__(self):
+        return int(hl.sha1(self.arr.view(np.uint8)).hexdigest(), 16)
+    
+    def __repr__(self):
+        return str(self.arr)
+
 class EightPuzzleProblem(Problem):
     
     def __init__(self, initial):
-        self.initial = np.array(initial)
-        self.goal = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        self.initial = HashableNDArray(np.array(initial))
+        self.goal = HashableNDArray(np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]]))
     
     def actions(self, state):
                 
         possible_actions = []
         
         # find where zero is
-        x, y = np.where(state == 0) # not that np.where returns all locations that has zero; so x and y are arrays
+        x, y = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so x and y are arrays
         x = x[0]
         y = y[0]
         if x > 0:
@@ -129,10 +155,10 @@ class EightPuzzleProblem(Problem):
     
     def result(self, state, action):
         # find where zero is
-        x, y = np.where(state == 0) # not that np.where returns all locations that has zero; so x and y are arrays
+        x, y = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so x and y are arrays
         x = x[0]
         y = y[0]
-        new_state = np.copy(state)
+        new_state = np.copy(state.arr)
         # assume the actions are all legal
         if action == 'L':
             replace_val = new_state[x-1, y]
@@ -151,9 +177,9 @@ class EightPuzzleProblem(Problem):
             new_state[x, y+1] = 0
             new_state[x, y] = replace_val
         
-        return new_state
+        return HashableNDArray(new_state)
     
     def goal_test(self, state):
-        return np.all(state == self.goal)
+        return state == self.goal
     
     
