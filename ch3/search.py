@@ -207,53 +207,15 @@ class Node:
     def __hash__(self):
         return hash(self.state)
 
-def tree_search(problem, frontier, interactive=False):
+def tree_search(problem, frontier):
     """Search through the successors of a problem to find a goal.
     The argument frontier should be an empty queue.
     Don't worry about repeated paths to a state. [Fig. 3.7]"""
     frontier.append(Node(problem.initial))
-    interrupt_help = ("\nEnter a command. Allowed commands are:\n" +
-                      "pf -- print frontier\n" + 
-                      "pn -- print expanded node\n" +
-                      "pp -- print path from start to the expanded node\n" +
-                      "s -- take a step\n" +
-                      "sg -- step until a goal expanded\n" +
-                      "d -- disable interrupt\n" +                       
-                      "> ")
-    node = None
-    step_to_goal = False          
-    while frontier:        
-        take_a_step = False        
-        while interactive and not take_a_step and not step_to_goal:
-            cmd = raw_input(interrupt_help)
-            if cmd == "pf":
-                print "Frontier: %s" %frontier
-            elif cmd == "pn":
-                print "Expanded node: %s" %node
-            elif cmd == "pp":
-                if node:
-                    print "Path from start to the expanded node: %s" %node.path()
-                else:
-                    print None                    
-            elif cmd == "s":                
-                take_a_step = True
-                print "Taking a step"
-            elif cmd == "sg":
-                step_to_goal = True
-                print "Taking all steps until the goal is expanded."
-            elif cmd == "d":
-                interactive = False
-                print "Interrupt disabled"
-            else:
-                print "Unrecognized command. Ignoring."
+    while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
-            if interactive:
-                print "Goal expanded."
-                print "Goal is: %s" %node
-                print "Path to goal is: %s" %node.path()
             return node
-            #print "Goal Found: %s" %node
         frontier.extend(node.expand(problem))
     return None
 
@@ -273,13 +235,13 @@ def graph_search(problem, frontier):
                         and child not in frontier)
     return None
 
-def breadth_first_tree_search(problem, interactive=False):
+def breadth_first_tree_search(problem):
     "Search the shallowest nodes in the search tree first."
-    return tree_search(problem, FIFOQueue(), interactive)
+    return tree_search(problem, FIFOQueue())
 
-def depth_first_tree_search(problem, interactive=False):
+def depth_first_tree_search(problem):
     "Search the deepest nodes in the search tree first."
-    return tree_search(problem, Stack(), interactive)
+    return tree_search(problem, Stack())
 
 def depth_first_graph_search(problem):
     "Search the deepest nodes in the search tree first."
