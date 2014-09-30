@@ -1,6 +1,29 @@
 '''
 Created on Sep 23, 2014
 
+TODO:
+
+1. Modify the Queue class so that it defines:
+    append and pop methods. Remove extend.
+    DONE.
+
+2. Modify the FIFOQueue so that it does not keep track of an index.
+    DONE.
+
+3. Create a LIFOQueue class.
+    DONE.
+
+4. Remove the update method.
+    DONE.
+
+5. See if we need the "some" method.
+    DONE.
+
+6. See if we need the if_ method.
+    DONE.
+
+7. For tree search and graph search, change the extend part.
+
 
 '''
 
@@ -12,123 +35,137 @@ def abstract():
     caller = inspect.getouterframes(inspect.currentframe())[1][3]
     raise NotImplementedError(caller + ' must be implemented in subclass')
 
-def some(predicate, seq):
-    """If some element x of seq satisfies predicate(x), return predicate(x).
-    >>> some(callable, [min, 3])
-    1
-    >>> some(callable, [2, 3])
-    0
-    """
-    for x in seq:
-        px = predicate(x)
-        if px: return px
-    return False
-
-def update(x, **entries):
-    """Update a dict; or an object with slots; according to entries.
-    >>> update({'a': 1}, a=10, b=20)
-    {'a': 10, 'b': 20}
-    >>> update(Struct(a=1), a=10, b=20)
-    Struct(a=10, b=20)
-    """
-    if isinstance(x, dict):
-        x.update(entries)
-    else:
-        x.__dict__.update(entries)
-    return x
-
-def if_(test, result, alternative):
-    """Like C++ and Java's (test ? result : alternative), except
-    both result and alternative are always evaluated. However, if
-    either evaluates to a function, it is applied to the empty arglist,
-    so you can delay execution by putting it in a lambda.
-    >>> if_(2 + 2 == 4, 'ok', lambda: expensive_computation())
-    'ok'
-    """
-    if test:
-        if callable(result): return result()
-        return result
-    else:
-        if callable(alternative): return alternative()
-        return alternative
-
 #______________________________________________________________________________
-# Queues: Stack, FIFOQueue, PriorityQueue
+# Queues: FIFOQueue, LIFOQueue, PriorityQueue
 
 class Queue:
-    """Queue is an abstract class/interface. There are three types:
-        Stack(): A Last In First Out Queue.
+    """Queue is an abstract class/interface. There are three types:        
         FIFOQueue(): A First In First Out Queue.
+        LIFOQueue(): A Last In First Out Queue.
         PriorityQueue(order, f): Queue in sorted order (default min-first).
     Each type supports the following methods and functions:
-        q.append(item)  -- add an item to the queue
-        q.extend(items) -- equivalent to: for item in items: q.append(item)
+        q.append(item)  -- add an item to the queue        
         q.pop()         -- return the top item from the queue
         len(q)          -- number of items in q (also q.__len())
         item in q       -- does q contain item?
-    Note that isinstance(Stack(), Queue) is false, because we implement stacks
-    as lists.  If Python ever gets interfaces, Queue will be an interface."""
-
-    def __init__(self):
+    """
+   
+    def append(self, item):
         abstract()
-
-    def extend(self, items):
-        for item in items: self.append(item)
-
-def Stack():
-    """Return an empty list, suitable as a Last-In-First-Out Queue."""
-    return []
+    
+    def pop(self):
+        abstract()
 
 class FIFOQueue(Queue):
     """A First-In-First-Out Queue."""
     def __init__(self):
-        self.A = []; self.start = 0
+        self.A = []
+    
+    def append(self, item):
+        """Add to the end"""
+        self.A.append(item)
+
+    def pop(self):
+        """Remove the first item"""
+        return self.A.pop(0)
+        
+    def __contains__(self, item):
+        return item in self.A
+    
+    def __len__(self):
+        return len(self.A)
+    
     def __repr__(self):
-        rep = "[" + str(self.A[self.start])
-        for i in range(self.start+1, len(self.A)):
+        """Return [A[0], A[1], ...]"""
+        rep = "[" + str(self.A[0])
+        for i in range(1, len(self.A)):
             rep += ", " + str(self.A[i])
         rep += "]"
         return rep
+
+class LIFOQueue(Queue):
+    """A Last-In-First-Out Queue."""
+    def __init__(self):
+        self.A = []
+    
     def append(self, item):
+        """Add to the end"""
         self.A.append(item)
-    def __len__(self):
-        return len(self.A) - self.start
-    def extend(self, items):
-        self.A.extend(items)
+
     def pop(self):
-        e = self.A[self.start]
-        self.start += 1
-        if self.start > 5 and self.start > len(self.A)/2:
-            self.A = self.A[self.start:]
-            self.start = 0
-        return e
+        """Remove the last item"""
+        return self.A.pop()
+        
     def __contains__(self, item):
-        return item in self.A[self.start:]
+        return item in self.A
+    
+    def __len__(self):
+        return len(self.A)
+    
+    def __repr__(self):
+        """Return [A[0], A[1], ...]"""
+        rep = "[" + str(self.A[0])
+        for i in range(1, len(self.A)):
+            rep += ", " + str(self.A[i])
+        rep += "]"
+        return rep
 
 class PriorityQueue(Queue):
     """A queue in which the minimum (or maximum) element (as determined by f and
-    order) is returned first. If order is min, the item with minimum f(x) is
-    returned first; if order is max, then it is the item with maximum f(x).
-    Also supports dict-like lookup."""
-    def __init__(self, order=min, f=lambda x: x):
-        update(self, A=[], order=order, f=f)
+    order) is returned first. If order is min_first, the item with minimum f(x) is
+    returned first; otherwise, the item with the maximum f(x) is returned.
+    Also supports dict-like lookup.
+    """
+    def __init__(self, order="min_first", f=lambda x: x):
+        self.A = []
+        self.order = order
+        self.f = f
+    
     def append(self, item):
         bisect.insort(self.A, (self.f(item), item))
-    def __len__(self):
-        return len(self.A)
+    
     def pop(self):
-        if self.order == min:
+        if self.order == "min_first":
             return self.A.pop(0)[1]
         else:
             return self.A.pop()[1]
-    def __contains__(self, item):
-        return some(lambda (_, x): x == item, self.A)
+        
+    def __contains__(self, item):        
+        for _, x in self.A:
+            if item == x:
+                return True                    
+        return False
+        
+    
+    def __len__(self):
+        return len(self.A)
+    
+    def __repr__(self):
+        """Return [A[0], A[1], ...]"""
+        
+        rep = "["
+        
+        if self.order == "min_first":
+            rep = "[" + str(self.A[0][1]) + ":" + str(self.A[0][0]) 
+            for i in range(1, len(self.A)):
+                rep += ", " + str(self.A[i][1]) + ":" + str(self.A[i][0])
+        else:
+            rep = "[" + str(self.A[-1][1]) + ":" + str(self.A[-1][0])
+            for i in range(len(self.A)-2, -1, -1):
+                rep += ", " + str(self.A[i][1]) + ":" + str(self.A[i][0])        
+        
+        rep += "]"
+        
+        return rep
+    
+    # For dict-like operations
     def __getitem__(self, key):
         for _, item in self.A:
             if item == key:
                 return item
+            
     def __delitem__(self, key):
-        for i, (value, item) in enumerate(self.A):
+        for i, (_, item) in enumerate(self.A):
             if item == key:
                 self.A.pop(i)
                 return
@@ -138,15 +175,18 @@ class Node:
     that this is a successor of) and to the actual state for this node. Note
     that if a state is arrived at by two paths, then there are two nodes with
     the same state.  Also includes the action that got us to this state, and
-    the total path_cost (also known as g) to reach the node.  Other functions
-    may add an f and h value; see best_first_graph_search and astar_search for
-    an explanation of how the f and h values are handled. You will not need to
+    the total path_cost (also known as g) to reach the node. You will not need to
     subclass this class."""
 
     def __init__(self, state, parent=None, action=None, path_cost=0):
         "Create a search tree Node, derived from a parent by an action."
-        update(self, state=state, parent=parent, action=action,
-               path_cost=path_cost, depth=0)
+        
+        self.state=state
+        self.parent=parent, 
+        self.action=action,
+        self.path_cost=path_cost
+        
+        self.depth=0        
         if parent:
             self.depth = parent.depth + 1
 
@@ -221,11 +261,11 @@ def breadth_first_tree_search(problem):
 
 def depth_first_tree_search(problem):
     "Search the deepest nodes in the search tree first."
-    return tree_search(problem, Stack())
+    return tree_search(problem, LIFOQueue())
 
 def depth_first_graph_search(problem):
     "Search the deepest nodes in the search tree first."
-    return graph_search(problem, Stack())
+    return graph_search(problem, LIFOQueue())
 
 def breadth_first_search(problem):
     "[Fig. 3.11]"
@@ -291,7 +331,11 @@ def depth_limited_search(problem, limit=50):
                     cutoff_occurred = True
                 elif result is not None:
                     return result
-            return if_(cutoff_occurred, 'cutoff', None)
+            
+            if cutoff_occurred:
+                return 'cutoff'
+            else:
+                return None
 
     # Body of depth_limited_search:
     return recursive_dls(Node(problem.initial), problem, limit)
