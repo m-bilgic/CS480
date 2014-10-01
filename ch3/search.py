@@ -1,34 +1,6 @@
 '''
 Created on Sep 23, 2014
 
-TODO:
-
-1. Modify the Queue class so that it defines:
-    append and pop methods. Remove extend.
-    DONE.
-
-2. Modify the FIFOQueue so that it does not keep track of an index.
-    DONE.
-
-3. Create a LIFOQueue class.
-    DONE.
-
-4. Remove the update method.
-    DONE.
-
-5. See if we need the "some" method.
-    DONE.
-
-6. See if we need the if_ method.
-    DONE.
-
-7. For tree search and graph search, change the extend part.
-    DONE.
-    
-8. Make sure we have two versions of tree and graph search - uninformed and informed.
-    DONE.
-
-
 '''
 
 import bisect
@@ -222,16 +194,34 @@ class Node:
 #______________________________________________________________________________
 # Uninformed Search
 
+NUM_NODES_TRIED = 0
+NUM_NODES_GENERATED = 0
+MAX_SIZE_OF_FRONTIER = 0
+MAX_SIZE_OF_EXPLORED = 0
+
 def uninformed_tree_search(problem, frontier):
     """Uninformed tree search. Frontier is either a
     FIFOQueue or a LIFOQueue.
     """
+    global NUM_NODES_TRIED
+    global NUM_NODES_GENERATED
+    global MAX_SIZE_OF_FRONTIER
+    global MAX_SIZE_OF_EXPLORED
+    
+    NUM_NODES_TRIED = 0
+    NUM_NODES_GENERATED = 1
+    MAX_SIZE_OF_FRONTIER = 1
+    MAX_SIZE_OF_EXPLORED = 0
+     
     frontier.append(Node(problem.initial))
     while frontier:
+        MAX_SIZE_OF_FRONTIER = max(MAX_SIZE_OF_FRONTIER, len(frontier))
         node = frontier.pop()
+        NUM_NODES_TRIED += 1    
         if problem.goal_test(node.state):
             return node
-        for child in node.expand(problem):            
+        for child in node.expand(problem):
+            NUM_NODES_GENERATED += 1            
             frontier.append(child)
     return None
 
@@ -241,17 +231,32 @@ def uninformed_graph_search(problem, frontier):
     Because it is uninformed, it does not check whether
     a better path to a Node in frontier is found.
     """
+    
+    global NUM_NODES_TRIED
+    global NUM_NODES_GENERATED
+    global MAX_SIZE_OF_FRONTIER
+    global MAX_SIZE_OF_EXPLORED
+    
+    NUM_NODES_TRIED = 0
+    NUM_NODES_GENERATED = 1
+    MAX_SIZE_OF_FRONTIER = 1
+    MAX_SIZE_OF_EXPLORED = 0
+    
     frontier.append(Node(problem.initial))
     explored = set()
     while frontier:
+        MAX_SIZE_OF_FRONTIER = max(MAX_SIZE_OF_FRONTIER, len(frontier))
+        MAX_SIZE_OF_EXPLORED = max(MAX_SIZE_OF_EXPLORED, len(explored))
         node = frontier.pop()
+        NUM_NODES_TRIED += 1
         if problem.goal_test(node.state):
             return node
         explored.add(node.state)
         for child in node.expand(problem):
+            NUM_NODES_GENERATED += 1
             if child.state not in explored and child not in frontier:
                 frontier.append(child)
-        return None
+    return None
 
 def breadth_first_search(problem, search_type=uninformed_tree_search):
     "Search the shallowest nodes in the search tree first."
@@ -267,6 +272,16 @@ def best_first_tree_search(problem, cost_function):
     """Search the nodes with the lowest cost_function scores first.
     You specify the function cost_function(node) that you want to minimize
     """
+    
+    global NUM_NODES_TRIED
+    global NUM_NODES_GENERATED
+    global MAX_SIZE_OF_FRONTIER
+    global MAX_SIZE_OF_EXPLORED
+    
+    NUM_NODES_TRIED = 0
+    NUM_NODES_GENERATED = 1
+    MAX_SIZE_OF_FRONTIER = 1
+    MAX_SIZE_OF_EXPLORED = 0
 
     node = Node(problem.initial)
     if problem.goal_test(node.state):
@@ -274,12 +289,13 @@ def best_first_tree_search(problem, cost_function):
     frontier = PriorityQueue(cost_function)
     frontier.append(node)
     while frontier:
-        print "Frontier", frontier
+        MAX_SIZE_OF_FRONTIER = max(MAX_SIZE_OF_FRONTIER, len(frontier))
         node = frontier.pop()
-        print "Expanding", node
+        NUM_NODES_TRIED += 1
         if problem.goal_test(node.state):
             return node        
-        for child in node.expand(problem):            
+        for child in node.expand(problem):
+            NUM_NODES_GENERATED += 1            
             frontier.append(child)            
     return None
 
@@ -288,6 +304,17 @@ def best_first_graph_search(problem, cost_function):
     You specify the function cost_function(node) that you want to minimize.
     Remember the states you have explored and generated.
     """
+    
+    global NUM_NODES_TRIED
+    global NUM_NODES_GENERATED
+    global MAX_SIZE_OF_FRONTIER
+    global MAX_SIZE_OF_EXPLORED
+    
+    NUM_NODES_TRIED = 0
+    NUM_NODES_GENERATED = 1
+    MAX_SIZE_OF_FRONTIER = 1
+    MAX_SIZE_OF_EXPLORED = 0
+    
     node = Node(problem.initial)
     if problem.goal_test(node.state):
         return node
@@ -295,13 +322,15 @@ def best_first_graph_search(problem, cost_function):
     frontier.append(node)
     explored = set()
     while frontier:
-        print "Frontier", frontier
+        MAX_SIZE_OF_FRONTIER = max(MAX_SIZE_OF_FRONTIER, len(frontier))
+        MAX_SIZE_OF_EXPLORED = max(MAX_SIZE_OF_EXPLORED, len(explored))  
         node = frontier.pop()
-        print "Expanding", node
+        NUM_NODES_TRIED += 1
         if problem.goal_test(node.state):
             return node
         explored.add(node.state)
         for child in node.expand(problem):
+            NUM_NODES_GENERATED += 1
             if child.state not in explored and child not in frontier:
                 frontier.append(child)
             elif child in frontier:

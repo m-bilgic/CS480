@@ -4,11 +4,91 @@ Created on Sep 23, 2014
 @author: mbilgic
 '''
 
-from problem import TravelProblem, CityMap
-from search import best_first_tree_search, best_first_graph_search
-from search import uniform_cost_search, greedy_best_first_search, astar_search
+from problem import TravelProblem, CityMap, EightPuzzleProblem, misplaced_tiles_heuristic
+from search import best_first_tree_search, best_first_graph_search, uninformed_tree_search, uninformed_graph_search
+from search import uniform_cost_search, greedy_best_first_search, astar_search, breadth_first_search, depth_first_search
+
+import search
 
 if __name__ == '__main__':
+       
+    print
+    print '=' * 50
+    print '=' * 50
+    print "EIGHT-PUZZLE PROBLEM"
+    print '=' * 50
+    print '=' * 50
+      
+    ep = EightPuzzleProblem([[3, 1, 2], [7, 5, 0], [4, 6, 8]])
+    #ep = EightPuzzleProblem([[1, 0, 2], [3, 4, 5], [6, 7, 8]])
+    
+    print
+    print '-' * 50
+    print "Running BREADTH-FIRST-TREE-SEARCH"
+    print '-' * 50
+    
+    bfts = breadth_first_search(ep, search_type=uninformed_tree_search)
+    
+    print "Solution", bfts.solution()
+    
+    print "# nodes tried: %d" %search.NUM_NODES_TRIED
+    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
+    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
+    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
+    
+    
+    print
+    print '-' * 50
+    print "Running UNIFORM-COST-TREE-SEARCH"
+    print '-' * 50
+    
+    ucts = uniform_cost_search(ep, search_type=best_first_tree_search)
+    
+    print "Solution", ucts.solution()
+    
+    print "# nodes tried: %d" %search.NUM_NODES_TRIED
+    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
+    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
+    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
+    
+    print
+    print '-' * 50
+    print "Running GREEDY-BEST-FIRST-TREE-SEARCH USING # MISPLACED TILES HEURISTIC"
+    print '-' * 50
+    
+    gbfts = greedy_best_first_search(ep, misplaced_tiles_heuristic, search_type=best_first_tree_search)
+    
+    print "Solution", gbfts.solution()
+    
+    print "# nodes tried: %d" %search.NUM_NODES_TRIED
+    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
+    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
+    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
+    
+    print
+    print '-' * 50
+    print "Running A*-TREE-SEARCH USING # MISPLACED TILES HEURISTIC"
+    print '-' * 50
+    
+    asts = astar_search(ep, misplaced_tiles_heuristic, search_type=best_first_tree_search)
+    
+    print "Solution", asts.solution()
+    
+    print "# nodes tried: %d" %search.NUM_NODES_TRIED
+    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
+    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
+    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
+    
+    
+    exit(0)
+    
+    print
+    print '=' * 50
+    print '=' * 50
+    print "HW1 MAP"
+    print '=' * 50
+    print '=' * 50
+    
     city_map = CityMap()
     
     city_map.add_road('F', 'S', 5)

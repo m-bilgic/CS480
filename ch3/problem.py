@@ -134,43 +134,48 @@ class EightPuzzleProblem(Problem):
         possible_actions = []
         
         # find where zero is
-        x, y = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so x and y are arrays
-        x = x[0]
-        y = y[0]
-        if x > 0:
+        row, col = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so row and col are arrays
+        row = row[0]
+        col = col[0]
+        
+        if col > 0:
             possible_actions.append('L')
-        if x < 2:
+        
+        if col < 2:
             possible_actions.append('R')
-        if y > 0:
+        
+        if row > 0:
             possible_actions.append('U')
-        if y < 2:
+        
+        if row < 2:
             possible_actions.append('D')
+        
         
         return possible_actions
     
     def result(self, state, action):
         # find where zero is
-        x, y = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so x and y are arrays
-        x = x[0]
-        y = y[0]
+        row, col = np.where(state.arr == 0) # not that np.where returns all locations that has zero; so row and col are arrays
+        row = row[0]
+        col = col[0]
         new_state = np.copy(state.arr)
         # assume the actions are all legal
-        if action == 'L':
-            replace_val = new_state[x-1, y]
-            new_state[x-1, y] = 0
-            new_state[x, y] = replace_val
-        elif action == 'R':
-            replace_val = new_state[x+1, y]
-            new_state[x+1, y] = 0
-            new_state[x, y] = replace_val
-        elif action == 'U':
-            replace_val = new_state[x, y-1]
-            new_state[x, y-1] = 0
-            new_state[x, y] = replace_val
+        if action == 'U':
+            replace_val = new_state[row-1, col]
+            new_state[row-1, col] = 0
+            new_state[row, col] = replace_val
         elif action == 'D':
-            replace_val = new_state[x, y+1]
-            new_state[x, y+1] = 0
-            new_state[x, y] = replace_val
+            replace_val = new_state[row+1, col]
+            new_state[row+1, col] = 0
+            new_state[row, col] = replace_val
+        elif action == 'L':
+            replace_val = new_state[row, col-1]
+            new_state[row, col-1] = 0
+            new_state[row, col] = replace_val
+        elif action == 'R':
+            replace_val = new_state[row, col+1]
+            new_state[row, col+1] = 0
+            new_state[row, col] = replace_val
         
         return HashableNDArray(new_state)
     
