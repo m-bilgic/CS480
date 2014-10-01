@@ -47,11 +47,6 @@ class Problem(object):
         and action. The default method costs 1 for every step in the path."""
         return c + 1
 
-    def value(self, state):
-        """For optimization problems, each state has a value.  Hill-climbing
-        and related algorithms try to maximize this value."""
-        abstract()
-
 class NQueensProblem(Problem):
     """The problem of placing N queens on an NxN board with none attacking
     each other.  A state is represented as an N-element array, where
@@ -181,5 +176,58 @@ class EightPuzzleProblem(Problem):
     
     def goal_test(self, state):
         return state == self.goal
+
+class CityMap:
+    """A City Map that connects cities through roads. Roads can be one-way.
+    Each road has a distance associated with it.
+    The underlying structure is a dictionary of dictionaries. Example:
+    {'Arad' : {'Sibiu': 140, 'Timisoara': 111, 'Zerind': 75}, ...}
+    """
+
+    def __init__(self):
+        self.the_map = {}
+
+    def add_one_way_road(self, A, B, distance):
+        """Add a one-way road"""
+        self.the_map.setdefault(A,{})[B] = distance
+    
+    def add_road(self, A, B, distance):
+        """Add a typical road that runs both ways"""
+        self.the_map.setdefault(A,{})[B] = distance
+        self.the_map.setdefault(B,{})[A] = distance       
+
+    def distance(self, A, B):
+        roads_from_A = self.the_map.setdefault(A, {})
+        if B in roads_from_A.keys():
+            return roads_from_A[B]
+        else:
+            return None
+    
+    def reachable_cities(self, A):
+        return self.the_map.setdefault(A, {}).keys()
+
+class TravelProblem(object):
+    """Given a CityMap, an initial city, and a goal city, find the shortest-cost path.
+    Each state is a city.
+    """
+
+    def __init__(self, initial, goal, city_map):        
+        self.initial = initial
+        self.goal = goal
+        self.city_map = city_map
+
+    def actions(self, state):
+        """Return the reachable cities."""
+        return self.city_map.reachable_cities(state)
+
+    def result(self, state, action):
+        """Because the actions and states are cities, simply return the action."""
+        return action
+
+    def goal_test(self, state):
+        return state == self.goal
+
+    def path_cost(self, c, state1, action, state2):        
+        return c + (self.city_map.distance(state1, state2) or np.inf)
     
     

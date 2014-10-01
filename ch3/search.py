@@ -23,11 +23,15 @@ TODO:
     DONE.
 
 7. For tree search and graph search, change the extend part.
+    DONE.
+    
+8. Make sure we have two versions of tree and graph search - uninformed and informed.
+    DONE.
 
 
 '''
 
-import sys, bisect
+import bisect
 
 
 def abstract():
@@ -111,24 +115,18 @@ class LIFOQueue(Queue):
         return rep
 
 class PriorityQueue(Queue):
-    """A queue in which the minimum (or maximum) element (as determined by f and
-    order) is returned first. If order is min_first, the item with minimum f(x) is
-    returned first; otherwise, the item with the maximum f(x) is returned.
-    Also supports dict-like lookup.
+    """A queue in which the minimum element (as determined by cost_function)
+    is returned first. Also supports dict-like lookup.
     """
-    def __init__(self, order="min_first", f=lambda x: x):
+    def __init__(self, cost_function=lambda x: x):
         self.A = []
-        self.order = order
-        self.f = f
+        self.cost_function = cost_function
     
     def append(self, item):
-        bisect.insort(self.A, (self.f(item), item))
+        bisect.insort(self.A, (self.cost_function(item), item))
     
-    def pop(self):
-        if self.order == "min_first":
-            return self.A.pop(0)[1]
-        else:
-            return self.A.pop()[1]
+    def pop(self):        
+        return self.A.pop(0)[1]
         
     def __contains__(self, item):        
         for _, x in self.A:
@@ -144,15 +142,9 @@ class PriorityQueue(Queue):
         """Return [A[0], A[1], ...]"""
         
         rep = "["
-        
-        if self.order == "min_first":
-            rep = "[" + str(self.A[0][1]) + ":" + str(self.A[0][0]) 
-            for i in range(1, len(self.A)):
-                rep += ", " + str(self.A[i][1]) + ":" + str(self.A[i][0])
-        else:
-            rep = "[" + str(self.A[-1][1]) + ":" + str(self.A[-1][0])
-            for i in range(len(self.A)-2, -1, -1):
-                rep += ", " + str(self.A[i][1]) + ":" + str(self.A[i][0])        
+        rep += str(self.A[0][1]) + ":" + str(self.A[0][0]) 
+        for i in range(1, len(self.A)):
+            rep += ", " + str(self.A[i][1]) + ":" + str(self.A[i][0])        
         
         rep += "]"
         
@@ -182,8 +174,8 @@ class Node:
         "Create a search tree Node, derived from a parent by an action."
         
         self.state=state
-        self.parent=parent, 
-        self.action=action,
+        self.parent=parent
+        self.action=action
         self.path_cost=path_cost
         
         self.depth=0        
@@ -200,9 +192,9 @@ class Node:
 
     def child_node(self, problem, action):
         "Fig. 3.10"
-        next = problem.result(self.state, action)
-        return Node(next, self, action,
-                    problem.path_cost(self.path_cost, self.state, action, next))
+        next_node = problem.result(self.state, action)
+        return Node(next_node, self, action,
+                    problem.path_cost(self.path_cost, self.state, action, next_node))
 
     def solution(self):
         "Return the sequence of actions to go from the root to this node."
@@ -227,78 +219,85 @@ class Node:
     def __hash__(self):
         return hash(self.state)
 
-def tree_search(problem, frontier):
-    """Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    Don't worry about repeated paths to a state. [Fig. 3.7]"""
+#______________________________________________________________________________
+# Uninformed Search
+
+def uninformed_tree_search(problem, frontier):
+    """Uninformed tree search. Frontier is either a
+    FIFOQueue or a LIFOQueue.
+    """
     frontier.append(Node(problem.initial))
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
             return node
-        frontier.extend(node.expand(problem))
+        for child in node.expand(problem):            
+            frontier.append(child)
     return None
 
-def graph_search(problem, frontier):
-    """Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    If two paths reach a state, only use the first one. [Fig. 3.7]"""
+def uninformed_graph_search(problem, frontier):
+    """Uninformed graph search. Frontier is either a
+    FIFOQueue or a LIFOQueue.
+    Because it is uninformed, it does not check whether
+    a better path to a Node in frontier is found.
+    """
     frontier.append(Node(problem.initial))
     explored = set()
     while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
             return node
-        explored.add(node.state)
-        frontier.extend(child for child in node.expand(problem)
-                        if child.state not in explored
-                        and child not in frontier)
-    return None
-
-def breadth_first_tree_search(problem):
-    "Search the shallowest nodes in the search tree first."
-    return tree_search(problem, FIFOQueue())
-
-def depth_first_tree_search(problem):
-    "Search the deepest nodes in the search tree first."
-    return tree_search(problem, LIFOQueue())
-
-def depth_first_graph_search(problem):
-    "Search the deepest nodes in the search tree first."
-    return graph_search(problem, LIFOQueue())
-
-def breadth_first_search(problem):
-    "[Fig. 3.11]"
-    node = Node(problem.initial)
-    if problem.goal_test(node.state):
-        return node
-    frontier = FIFOQueue()
-    frontier.append(node)
-    explored = set()
-    while frontier:
-        node = frontier.pop()
         explored.add(node.state)
         for child in node.expand(problem):
             if child.state not in explored and child not in frontier:
-                if problem.goal_test(child.state):
-                    return child
                 frontier.append(child)
-    return None
+        return None
 
-def best_first_graph_search(problem, f):
-    """Search the nodes with the lowest f scores first.
-    You specify the function f(node) that you want to minimize; for example,
-    if f is a heuristic estimate to the goal, then we have greedy best
-    first search; if f is node.depth then we have breadth-first search."""
+def breadth_first_search(problem, search_type=uninformed_tree_search):
+    "Search the shallowest nodes in the search tree first."
+    return search_type(problem, FIFOQueue())
+
+def depth_first_search(problem, search_type=uninformed_tree_search):
+    "Search the deepest nodes in the search tree first."
+    return search_type(problem, LIFOQueue())
+#______________________________________________________________________________
+# Informed Search
+
+def best_first_tree_search(problem, cost_function):
+    """Search the nodes with the lowest cost_function scores first.
+    You specify the function cost_function(node) that you want to minimize
+    """
 
     node = Node(problem.initial)
     if problem.goal_test(node.state):
         return node
-    frontier = PriorityQueue(min, f)
+    frontier = PriorityQueue(cost_function)
+    frontier.append(node)
+    while frontier:
+        print "Frontier", frontier
+        node = frontier.pop()
+        print "Expanding", node
+        if problem.goal_test(node.state):
+            return node        
+        for child in node.expand(problem):            
+            frontier.append(child)            
+    return None
+
+def best_first_graph_search(problem, cost_function):
+    """Search the nodes with the lowest cost_function scores first.
+    You specify the function cost_function(node) that you want to minimize.
+    Remember the states you have explored and generated.
+    """
+    node = Node(problem.initial)
+    if problem.goal_test(node.state):
+        return node
+    frontier = PriorityQueue(cost_function)
     frontier.append(node)
     explored = set()
     while frontier:
+        print "Frontier", frontier
         node = frontier.pop()
+        print "Expanding", node
         if problem.goal_test(node.state):
             return node
         explored.add(node.state)
@@ -307,55 +306,16 @@ def best_first_graph_search(problem, f):
                 frontier.append(child)
             elif child in frontier:
                 incumbent = frontier[child]
-                if f(child) < f(incumbent):
+                if cost_function(child) < cost_function(incumbent): # Check if a better path is found
                     del frontier[incumbent]
                     frontier.append(child)
     return None
 
-def uniform_cost_search(problem):
-    "[Fig. 3.14]"
-    return best_first_graph_search(problem, lambda node: node.path_cost)
+def uniform_cost_search(problem, search_type=best_first_tree_search):
+    return search_type(problem, lambda node: node.path_cost)
 
-def depth_limited_search(problem, limit=50):
-    "[Fig. 3.17]"
-    def recursive_dls(node, problem, limit):
-        if problem.goal_test(node.state):
-            return node
-        elif node.depth == limit:
-            return 'cutoff'
-        else:
-            cutoff_occurred = False
-            for child in node.expand(problem):
-                result = recursive_dls(child, problem, limit)
-                if result == 'cutoff':
-                    cutoff_occurred = True
-                elif result is not None:
-                    return result
-            
-            if cutoff_occurred:
-                return 'cutoff'
-            else:
-                return None
+def greedy_best_first_search(problem, h, search_type=best_first_tree_search):
+    return search_type(problem, lambda node: h(node))
 
-    # Body of depth_limited_search:
-    return recursive_dls(Node(problem.initial), problem, limit)
-
-def iterative_deepening_search(problem):
-    "[Fig. 3.18]"
-    for depth in xrange(sys.maxint):
-        result = depth_limited_search(problem, depth)
-        if result != 'cutoff':
-            return result
-
-#______________________________________________________________________________
-# Informed (Heuristic) Search
-
-greedy_best_first_graph_search = best_first_graph_search
-    # Greedy best-first search is accomplished by specifying f(n) = h(n).
-
-def astar_search(problem, h=None):
-    """A* search is best-first graph search with f(n) = g(n)+h(n).
-    You need to specify the h function when you call astar_search, or
-    else in your Problem subclass."""
-    h = h or problem.h
-    return best_first_graph_search(problem, lambda n: n.path_cost + h(n))
+def astar_search(problem, h, search_type=best_first_tree_search):
+    return search_type(problem, lambda node: node.path_cost + h(node))
