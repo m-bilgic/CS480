@@ -1,8 +1,3 @@
-'''
-Created on Sep 23, 2014
-
-'''
-
 def abstract():
     import inspect
     caller = inspect.getouterframes(inspect.currentframe())[1][3]

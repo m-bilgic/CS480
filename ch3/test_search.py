@@ -1,14 +1,6 @@
-'''
-Created on Sep 23, 2014
-
-@author: mbilgic
-'''
-
 from problem import TravelProblem, CityMap, EightPuzzleProblem, misplaced_tiles_heuristic
 from search import best_first_tree_search, best_first_graph_search, uninformed_tree_search, uninformed_graph_search
 from search import uniform_cost_search, greedy_best_first_search, astar_search, breadth_first_search, depth_first_search
-
-import search
 
 if __name__ == '__main__':
        

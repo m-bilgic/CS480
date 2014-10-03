@@ -1,10 +1,4 @@
-'''
-Created on Sep 23, 2014
-
-'''
-
 import bisect
-
 
 def abstract():
     import inspect
