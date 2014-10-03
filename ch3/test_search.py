@@ -20,7 +20,6 @@ if __name__ == '__main__':
     print '=' * 50
       
     ep = EightPuzzleProblem([[3, 1, 2], [7, 5, 0], [4, 6, 8]])
-    #ep = EightPuzzleProblem([[1, 0, 2], [3, 4, 5], [6, 7, 8]])
     
     print
     print '-' * 50
@@ -31,12 +30,6 @@ if __name__ == '__main__':
     
     print "Solution", bfts.solution()
     
-    print "# nodes tried: %d" %search.NUM_NODES_TRIED
-    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
-    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
-    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
-    
-    
     print
     print '-' * 50
     print "Running UNIFORM-COST-TREE-SEARCH"
@@ -45,11 +38,6 @@ if __name__ == '__main__':
     ucts = uniform_cost_search(ep, search_type=best_first_tree_search)
     
     print "Solution", ucts.solution()
-    
-    print "# nodes tried: %d" %search.NUM_NODES_TRIED
-    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
-    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
-    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
     
     print
     print '-' * 50
@@ -60,11 +48,6 @@ if __name__ == '__main__':
     
     print "Solution", gbfts.solution()
     
-    print "# nodes tried: %d" %search.NUM_NODES_TRIED
-    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
-    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
-    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
-    
     print
     print '-' * 50
     print "Running A*-TREE-SEARCH USING # MISPLACED TILES HEURISTIC"
@@ -73,14 +56,6 @@ if __name__ == '__main__':
     asts = astar_search(ep, misplaced_tiles_heuristic, search_type=best_first_tree_search)
     
     print "Solution", asts.solution()
-    
-    print "# nodes tried: %d" %search.NUM_NODES_TRIED
-    print "# nodes generated: %d" %search.NUM_NODES_GENERATED
-    print "Max size of the frontier: %d" %search.MAX_SIZE_OF_FRONTIER
-    print "Max size of the explored: %d" %search.MAX_SIZE_OF_EXPLORED
-    
-    
-    exit(0)
     
     print
     print '=' * 50
