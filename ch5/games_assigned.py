@@ -1,14 +1,18 @@
-"""Games, or Adversarial Search. (Chapter 5)
-"""
-
-#from ch5.utils_aima import *
 import random
-
+import numpy as np
 from ast import literal_eval
 
-abstract = None
-import numpy as np
 infinity = np.Inf
+
+
+def abstract():
+    import inspect
+    caller = inspect.getouterframes(inspect.currentframe())[1][3]
+    raise NotImplementedError(caller + ' must be implemented in subclass')
+
+def todo():
+    raise NotImplementedError('You must complete the implementation.')
+
 def argmax(seq, fn):
     """Return an element with highest fn(seq[i]) score; tie goes to first one.
     >>> argmax(['one', 'to', 'three'], len)
@@ -27,57 +31,6 @@ def argmin(seq, fn):
         if x_score < best_score:
             best, best_score = x, x_score
     return best
-
-def Dict(**entries):
-    """Create a dict out of the argument=value arguments.
-    >>> Dict(a=1, b=2, c=3)
-    {'a': 1, 'c': 3, 'b': 2}
-    """
-    return entries
-
-class Struct:
-    """Create an instance with argument=value slots.
-    This is for making a lightweight object whose class doesn't matter."""
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
-
-    def __cmp__(self, other):
-        if isinstance(other, Struct):
-            return cmp(self.__dict__, other.__dict__)
-        else:
-            return cmp(self.__dict__, other)
-
-    def __repr__(self):
-        args = ['%s=%s' % (k, repr(v)) for (k, v) in vars(self).items()]
-        return 'Struct(%s)' % ', '.join(sorted(args))
-
-def if_(test, result, alternative):
-    """Like C++ and Java's (test ? result : alternative), except
-    both result and alternative are always evaluated. However, if
-    either evaluates to a function, it is applied to the empty arglist,
-    so you can delay execution by putting it in a lambda.
-    >>> if_(2 + 2 == 4, 'ok', lambda: expensive_computation())
-    'ok'
-    """
-    if test:
-        if callable(result): return result()
-        return result
-    else:
-        if callable(alternative): return alternative()
-        return alternative
-
-def update(x, **entries):
-    """Update a dict; or an object with slots; according to entries.
-    >>> update({'a': 1}, a=10, b=20)
-    {'a': 10, 'b': 20}
-    >>> update(Struct(a=1), a=10, b=20)
-    Struct(a=10, b=20)
-    """
-    if isinstance(x, dict):
-        x.update(entries)
-    else:
-        x.__dict__.update(entries)
-    return x
 
 #______________________________________________________________________________
 # Minimax Search
@@ -149,7 +102,7 @@ def alphabeta_search(state, game):
 def query_tictactoe_player(game, state):
     "Make a move by querying standard input."
     game.display(state)
-    move = raw_input('Your move? Enter as a tuple, e.g. (1,2)')
+    move = raw_input('Your move? Enter as a tuple (x,y)')
     return literal_eval(move)
     
 def random_player(game, state):
@@ -161,23 +114,17 @@ def alphabeta_player(game, state):
 
 def play_game(game, *players):
     """Play an n-person, move-alternating game.
-    >>> play_game(Fig52Game(), alphabeta_player, alphabeta_player)
-    3
     """
     state = game.initial
     while True:
         for player in players:
-            #print "State:\n", game.display(state) 
             move = player(game, state)
-            #print "Move: ", move
             state = game.result(state, move)
-            #print "State:\n", game.display(state)
-            #print
             if game.terminal_test(state):
                 return game.utility(state, game.to_move(game.initial))
 
 #______________________________________________________________________________
-# Some Sample Games
+# Games
 
 class Game:
     """A game is similar to a problem, but it has a utility for each
@@ -190,15 +137,15 @@ class Game:
 
     def actions(self, state):
         "Return a list of the allowable moves at this point."
-        abstract
+        abstract()
 
     def result(self, state, move):
         "Return the state that results from making a move from a state."
-        abstract
+        abstract()
 
     def utility(self, state, player):
         "Return the value of this final state to player."
-        abstract
+        abstract()
 
     def terminal_test(self, state):
         "Return True if this is a final state for the game."
@@ -217,79 +164,51 @@ class Game:
 
 
 class TicTacToe(Game):
-    """Play TicTacToe on an h x v board, with Max (first player) playing 'X'.
-    A state has the player to move, a cached utility, a list of moves in
-    the form of a list of (x, y) positions, and a board, in the form of
-    a dict of {(x, y): Player} entries, where Player is 'X' or 'O'."""
-    def __init__(self, h=3, v=3, k=3):
-        update(self, h=h, v=v, k=k)
-        moves = [(x, y) for x in range(1, h+1)
-                 for y in range(1, v+1)]
-        self.initial = Struct(to_move='X', utility=0, board={}, moves=moves)
+    """Play TicTacToe on an 3 x 3 board, with Max (first player) playing 'X'.
+    A move is a tuple (x,y).
+    Each game state needs to know who's turn it is.
+    """
+    def __init__(self):
+        "Create an empty TicTacToe board and assign it to the self.initial variable."
+        todo()
 
     def actions(self, state):
-        "Legal moves are any square not yet taken."
-        return state.moves
+        "Legal moves are any square not yet taken. Return as a list of tuples."
+        todo()
 
     def result(self, state, move):
-        if move not in state.moves:
-            return state # Illegal move has no effect
-        board = state.board.copy(); board[move] = state.to_move
-        moves = list(state.moves); moves.remove(move)
-        return Struct(to_move=if_(state.to_move == 'X', 'O', 'X'),
-                      utility=self.compute_utility(board, move, state.to_move),
-                      board=board, moves=moves)
+        """"Return the state that would result if the move is taken.
+        If the move is illegal, ignore it.
+        """ 
+        todo()
 
     def utility(self, state, player):
         "Return the value to player; 1 for win, -1 for loss, 0 otherwise."
-        return if_(player == 'X', state.utility, -state.utility)
+        todo()
 
     def terminal_test(self, state):
         "A state is terminal if it is won or there are no empty squares."
-        return state.utility != 0 or len(state.moves) == 0
+        todo()
 
     def display(self, state):
-        board = state.board
-        for x in range(1, self.h+1):
-            for y in range(1, self.v+1):
-                print board.get((x, y), '.'),
-            print
+        "Display the state in a human-readable format."
+        todo()
 
     def compute_utility(self, board, move, player):
-        "If X wins with this move, return 1; if O return -1; else return 0."
-        if (self.k_in_row(board, move, player, (0, 1)) or
-            self.k_in_row(board, move, player, (1, 0)) or
-            self.k_in_row(board, move, player, (1, -1)) or
-            self.k_in_row(board, move, player, (1, 1))):
-            return if_(player == 'X', +1, -1)
-        else:
-            return 0
-
-    def k_in_row(self, board, move, player, (delta_x, delta_y)):
-        "Return true if there is a line through move on board for player."
-        x, y = move
-        n = 0 # n is number of moves in row
-        while board.get((x, y)) == player:
-            n += 1
-            x, y = x + delta_x, y + delta_y
-        x, y = move
-        while board.get((x, y)) == player:
-            n += 1
-            x, y = x - delta_x, y - delta_y
-        n -= 1 # Because we counted move itself twice
-        return n >= self.k
-
-#__doc__ += random_tests("""
-#>>> play_game(Fig52Game(), random_player, random_player)
-#6
-#>>> play_game(TicTacToe(), random_player, random_player)
-#0
-#""")
+        "If X wins with this move, return 1; if O wins return -1; else return 0."
+        todo()
 
 if __name__ == '__main__':
-    #print play_game(Fig52Game(), random_player, random_player)
-    #print play_game(TicTacToe(), random_player, random_player)
-    game = TicTacToe()
-    #play_game(game, random_player, query_tictactoe_player)
-    play_game(game, random_player, random_player)
-    print game
+    
+    # A random player playing against a random player
+    play_game(TicTacToe(), random_player, random_player)
+    
+    # A random player playing against an alpha-beta player
+    play_game(TicTacToe(), random_player, alphabeta_player)
+    
+    # A random player playing against a human player
+    play_game(TicTacToe(), random_player, query_tictactoe_player)
+    
+    # An alpha-beta player playing against a human player
+    play_game(TicTacToe(), alphabeta_player, query_tictactoe_player)
+    
