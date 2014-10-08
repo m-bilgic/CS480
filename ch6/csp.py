@@ -1,11 +1,27 @@
 """CSP (Constraint Satisfaction Problems) problems and solvers. (Chapter 6)."""
 
-from ch6.utils_aima import *
+from ch6.utils_aima import count_if, every, find_if, if_, argmin_random_tie
+
+"""
+TODO:
+
+1. Rename vars to variables
+    DONE.
+    
+2. Remove update method
+    DONE.
+    
+3. count_if
+4. every
+5. find_if
+6. if_
+7. argmin_random_tie
+"""
 
 class CSP:
     """This class describes finite-domain Constraint Satisfaction Problems.
     A CSP is specified by the following inputs:
-        vars        A list of variables; each is atomic (e.g. int or string).
+        variables   A list of variables; each is atomic (e.g. int or string).
         domains     A dict of {var:[possible_value, ...]} entries.
         neighbors   A dict of {var:[var,...]} that for each variable lists
                     the other variables that participate in constraints.
@@ -25,12 +41,15 @@ class CSP:
         display(a)              Print a human-readable representation
     """
 
-    def __init__(self, vars, domains, neighbors, constraints):
-        "Construct a CSP problem. If vars is empty, it becomes domains.keys()."
-        vars = vars or domains.keys()
-        update(self, vars=vars, domains=domains,
-               neighbors=neighbors, constraints=constraints,
-               initial=(), curr_domains=None, nassigns=0)
+    def __init__(self, variables, domains, neighbors, constraints):
+        "Construct a CSP problem. If variables is empty, it becomes domains.keys()."
+        self.variables = variables or domains.keys()
+        self.domains=domains
+        self.neighbors=neighbors
+        self.constraints=constraints
+        self.initial=()
+        self.curr_domains=None
+        self.nassigns=0
 
     def assign(self, var, val, assignment):
         "Add {var: val} to assignment; Discard the old value if any."
@@ -64,7 +83,7 @@ class CSP:
         for this only if we use it.)"""
         if self.curr_domains is None:
             self.curr_domains = dict((v, list(self.domains[v]))
-                                     for v in self.vars)
+                                     for v in self.variables)
 
     def suppose(self, var, value):
         "Start accumulating inferences from assuming var=value."
@@ -86,7 +105,7 @@ class CSP:
         "Return the partial assignment implied by the current inferences."
         self.support_pruning()
         return dict((v, self.curr_domains[v][0])
-                    for v in self.vars if 1 == len(self.curr_domains[v]))
+                    for v in self.variables if 1 == len(self.curr_domains[v]))
 
     def restore(self, removals):
         "Undo a supposition and all inferences from it."
@@ -99,7 +118,7 @@ class CSP:
 def AC3(csp, queue=None, removals=None):
     """[Fig. 6.3]"""
     if queue is None:
-        queue = [(Xi, Xk) for Xi in csp.vars for Xk in csp.neighbors[Xi]]
+        queue = [(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]]
     csp.support_pruning()
     while queue:
         (Xi, Xj) = queue.pop()
@@ -129,12 +148,12 @@ def revise(csp, Xi, Xj, removals):
 
 def first_unassigned_variable(assignment, csp):
     "The default variable order."
-    return find_if(lambda var: var not in assignment, csp.vars)
+    return find_if(lambda var: var not in assignment, csp.variables)
 
 def mrv(assignment, csp):
     "Minimum-remaining-values heuristic."
     return argmin_random_tie(
-        [v for v in csp.vars if v not in assignment],
+        [v for v in csp.variables if v not in assignment],
         lambda var: num_legal_values(csp, var, assignment))
 
 def num_legal_values(csp, var, assignment):
@@ -185,7 +204,7 @@ def backtracking_search(csp,
     """
 
     def backtrack(assignment):
-        if len(assignment) == len(csp.vars):
+        if len(assignment) == len(csp.variables):
             return assignment
         var = select_unassigned_variable(assignment, csp)
         for value in order_domain_values(var, assignment, csp):
@@ -216,7 +235,7 @@ def different_values_constraint(A, a, B, b):
 #______________________________________________________________________________
 # Sudoku
 
-import itertools
+import itertools, re
 
 def flatten(seqs): return sum(seqs, [])
 
@@ -289,17 +308,18 @@ class Sudoku(CSP):
         print '\n------+-------+------\n'.join(
             '\n'.join(reduce(abut, map(show_box, brow))) for brow in self.bgrid)
 
-
-__doc__ += random_tests("""
->>> min_conflicts(australia)
-{'WA': 'B', 'Q': 'B', 'T': 'G', 'V': 'B', 'SA': 'R', 'NT': 'G', 'NSW': 'G'}
->>> min_conflicts(NQueensCSP(8), max_steps=10000)
-{0: 5, 1: 0, 2: 4, 3: 1, 4: 7, 5: 2, 6: 6, 7: 3}
-""")
-
 if __name__ == '__main__':
-    e = Sudoku(easy1)    
+    e = Sudoku(harder1)    
     print "Initial\n"
     e.display(e.infer_assignment())
-    print "\nSolved\n"
-    e.display(backtracking_search(e, select_unassigned_variable=mrv, inference=forward_checking))
+    #print "\nSolving... First variable, unordered domain values, No inference\n"
+    #e.display(backtracking_search(e, select_unassigned_variable=first_unassigned_variable, order_domain_values=unordered_domain_values, inference=no_inference))
+    #print "\nSolving... First variable, unordered domain values, FC\n"
+    #e.display(backtracking_search(e, select_unassigned_variable=first_unassigned_variable, order_domain_values=unordered_domain_values, inference=forward_checking))
+    print "\nSolving... MRV variable, unordered domain values, FC\n"
+    e.display(backtracking_search(e, select_unassigned_variable=mrv, order_domain_values=unordered_domain_values, inference=forward_checking))
+    print "\nSolving... MRV variable, LCV domain values, FC\n"
+    e.display(backtracking_search(e, select_unassigned_variable=mrv, order_domain_values=lcv, inference=forward_checking))
+    print "\nSolving... MRV variable, LCV domain values, MAC\n"
+    e.display(backtracking_search(e, select_unassigned_variable=mrv, order_domain_values=lcv, inference=mac))
+    
