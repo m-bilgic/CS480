@@ -1,9 +1,8 @@
 """CSP (Constraint Satisfaction Problems) problems and solvers. (Chapter 6)."""
 
 from ch6.utils_aima import *
-from ch6 import search_aima
 
-class CSP(search_aima.Problem):
+class CSP:
     """This class describes finite-domain Constraint Satisfaction Problems.
     A CSP is specified by the following inputs:
         vars        A list of variables; each is atomic (e.g. int or string).
@@ -12,34 +11,18 @@ class CSP(search_aima.Problem):
                     the other variables that participate in constraints.
         constraints A function f(A, a, B, b) that returns true if neighbors
                     A, B satisfy the constraint when they have values A=a, B=b
-    In the textbook and in most mathematical definitions, the
-    constraints are specified as explicit pairs of allowable values,
-    but the formulation here is easier to express and more compact for
-    most cases. (For example, the n-Queens problem can be represented
-    in O(n) space using this notation, instead of O(N^4) for the
-    explicit representation.) In terms of describing the CSP as a
-    problem, that's all there is.
 
-    However, the class also supports data structures and methods that help you
-    solve CSPs by calling a search_aima function on the CSP.  Methods and slots are
-    as follows, where the argument 'a' represents an assignment, which is a
-    dict of {var:val} entries:
+    Methods and slots are as follows, where the argument 'a' represents an assignment, 
+    which is a dict of {var:val} entries:
         assign(var, val, a)     Assign a[var] = val; do other bookkeeping
         unassign(var, a)        Do del a[var], plus other bookkeeping
         nconflicts(var, val, a) Return the number of other variables that
                                 conflict with var=val
         curr_domains[var]       Slot: remaining consistent values for var
                                 Used by constraint propagation routines.
-    The following methods are used only by graph_search and tree_search:
-        actions(state)          Return a list of actions
-        result(state, action)   Return a successor of state
-        goal_test(state)        Return true if all constraints satisfied
     The following are just for debugging purposes:
         nassigns                Slot: tracks the number of assignments made
         display(a)              Print a human-readable representation
-
-    >>> search_aima.depth_first_graph_search(australia)
-    <Node (('WA', 'B'), ('Q', 'B'), ('T', 'B'), ('V', 'B'), ('SA', 'G'), ('NT', 'R'), ('NSW', 'R'))>
     """
 
     def __init__(self, vars, domains, neighbors, constraints):
@@ -73,31 +56,6 @@ class CSP(search_aima.Problem):
         "Show a human-readable representation of the CSP."
         # Subclasses can print in a prettier way, or display with a GUI
         print 'CSP:', self, 'with assignment:', assignment
-
-    ## These methods are for the tree- and graph-search_aima interface:
-
-    def actions(self, state):
-        """Return a list of applicable actions: nonconflicting
-        assignments to an unassigned variable."""
-        if len(state) == len(self.vars):
-            return []
-        else:
-            assignment = dict(state)
-            var = find_if(lambda v: v not in assignment, self.vars)
-            return [(var, val) for val in self.domains[var]
-                    if self.nconflicts(var, val, assignment) == 0]
-
-    def result(self, state, (var, val)):
-        "Perform an action and return the new state."
-        return state + ((var, val),)
-
-    def goal_test(self, state):
-        "The goal is to assign all vars, with all constraints satisfied."
-        assignment = dict(state)
-        return (len(assignment) == len(self.vars) and
-                every(lambda var: self.nconflicts(var, assignment[var],
-                                                  assignment) == 0,
-                      self.vars))
 
     ## These are for constraint propagation
 
@@ -134,13 +92,6 @@ class CSP(search_aima.Problem):
         "Undo a supposition and all inferences from it."
         for B, b in removals:
             self.curr_domains[B].append(b)
-
-    ## This is for min_conflicts search_aima
-
-    def conflicted_vars(self, current):
-        "Return a list of variables in current assignment that are in conflict"
-        return [var for var in self.vars
-                if self.nconflicts(var, current[var], current) > 0]
 
 #______________________________________________________________________________
 # Constraint Propagation with AC-3
@@ -230,21 +181,7 @@ def backtracking_search(csp,
                         select_unassigned_variable = first_unassigned_variable,
                         order_domain_values = unordered_domain_values,
                         inference = no_inference):
-    """[Fig. 6.5]
-    >>> backtracking_search(australia) is not None
-    True
-    >>> backtracking_search(australia, select_unassigned_variable=mrv) is not None
-    True
-    >>> backtracking_search(australia, order_domain_values=lcv) is not None
-    True
-    >>> backtracking_search(australia, select_unassigned_variable=mrv, order_domain_values=lcv) is not None
-    True
-    >>> backtracking_search(australia, inference=forward_checking) is not None
-    True
-    >>> backtracking_search(australia, inference=mac) is not None
-    True
-    >>> backtracking_search(usa, select_unassigned_variable=mrv, order_domain_values=lcv, inference=mac) is not None
-    True
+    """Backtracking search.
     """
 
     def backtrack(assignment):
@@ -264,71 +201,17 @@ def backtracking_search(csp,
         return None
 
     result = backtrack({})
-    assert result is None or csp.goal_test(result)
     return result
 
 
 #______________________________________________________________________________
-# Map-Coloring Problems
+# Inequality constraint
 
-class UniversalDict:
-    """A universal dict maps any key to the same value. We use it here
-    as the domains dict for CSPs in which all vars have the same domain.
-    >>> d = UniversalDict(42)
-    >>> d['life']
-    42
-    """
-    def __init__(self, value): self.value = value
-    def __getitem__(self, key): return self.value
-    def __repr__(self): return '{Any: %r}' % self.value
+
 
 def different_values_constraint(A, a, B, b):
     "A constraint saying two neighboring variables must differ in value."
     return a != b
-
-def MapColoringCSP(colors, neighbors):
-    """Make a CSP for the problem of coloring a map with different colors
-    for any two adjacent regions.  Arguments are a list of colors, and a
-    dict of {region: [neighbor,...]} entries.  This dict may also be
-    specified as a string of the form defined by parse_neighbors."""
-    if isinstance(neighbors, str):
-        neighbors = parse_neighbors(neighbors)
-    return CSP(neighbors.keys(), UniversalDict(colors), neighbors,
-               different_values_constraint)
-
-def parse_neighbors(neighbors, vars=[]):
-    """Convert a string of the form 'X: Y Z; Y: Z' into a dict mapping
-    regions to neighbors.  The syntax is a region name followed by a ':'
-    followed by zero or more region names, followed by ';', repeated for
-    each region name.  If you say 'X: Y' you don't need 'Y: X'.
-    >>> parse_neighbors('X: Y Z; Y: Z')
-    {'Y': ['X', 'Z'], 'X': ['Y', 'Z'], 'Z': ['X', 'Y']}
-    """
-    dict = DefaultDict([])
-    for var in vars:
-        dict[var] = []
-    specs = [spec.split(':') for spec in neighbors.split(';')]
-    for (A, Aneighbors) in specs:
-        A = A.strip()
-        dict.setdefault(A, [])
-        for B in Aneighbors.split():
-            dict[A].append(B)
-            dict[B].append(A)
-    return dict
-
-australia = MapColoringCSP(list('RGB'),
-                           'SA: WA NT Q NSW V; NT: WA Q; NSW: Q V; T: ')
-
-usa = MapColoringCSP(list('RGBY'),
-        """WA: OR ID; OR: ID NV CA; CA: NV AZ; NV: ID UT AZ; ID: MT WY UT;
-        UT: WY CO AZ; MT: ND SD WY; WY: SD NE CO; CO: NE KA OK NM; NM: OK TX;
-        ND: MN SD; SD: MN IA NE; NE: IA MO KA; KA: MO OK; OK: MO AR TX;
-        TX: AR LA; MN: WI IA; IA: WI IL MO; MO: IL KY TN AR; AR: MS TN LA;
-        LA: MS; WI: MI IL; IL: IN KY; IN: OH KY; MS: TN AL; AL: TN GA FL;
-        MI: OH IN; OH: PA WV KY; KY: WV VA TN; TN: VA NC GA; GA: NC SC FL;
-        PA: NY NJ DE MD WV; WV: MD VA; VA: MD DC NC; NC: SC; NY: VT MA CT NJ;
-        NJ: DE; DE: MD; MD: DC; VT: NH MA; MA: NH RI CT; CT: RI; ME: NH;
-        HI: ; AK: """)
 
 #______________________________________________________________________________
 # Sudoku
@@ -413,3 +296,10 @@ __doc__ += random_tests("""
 >>> min_conflicts(NQueensCSP(8), max_steps=10000)
 {0: 5, 1: 0, 2: 4, 3: 1, 4: 7, 5: 2, 6: 6, 7: 3}
 """)
+
+if __name__ == '__main__':
+    e = Sudoku(easy1)    
+    print "Initial\n"
+    e.display(e.infer_assignment())
+    print "\nSolved\n"
+    e.display(backtracking_search(e, select_unassigned_variable=mrv, inference=forward_checking))
