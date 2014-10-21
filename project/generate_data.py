@@ -18,10 +18,39 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.svm import SVC
 
+import numpy as np
+
+def generate_binary_data(n_samples = 1000, l0_prob = 0.5, n_useful = 20, usefullness = (1000,1000), n_replicated = 0, n_random=0, seed=0):
+    rg = np.random.RandomState(seed)
+    
+    n_features = n_useful + n_replicated + n_random
+    
+    u_f_p = [[],[]]  
+    
+    for _ in range(n_useful):
+        u_f_p[0].append(rg.beta(*usefullness))
+        u_f_p[1].append(rg.beta(*usefullness))
+    
+    X = np.zeros((n_samples, n_features))
+    y = np.zeros(n_samples, dtype=np.int)
+    
+    for i in range(n_samples):
+        #sample a label
+        label = int(rg.rand()<l0_prob)
+        y[i] = label
+        
+        for f in range(n_useful):
+            f_prob = u_f_p[label][f]
+            X[i,f] = int(rg.rand() < f_prob)             
+      
+    return X, y
+
 if __name__ == '__main__':
     
-    n = 2000    
-    X, y = make_classification(n_samples = n)
+    n = 2000
+    
+    X, y = generate_binary_data(n_samples = n, n_useful = 100, usefullness=(50,50))  
+    #X, y = make_classification(n_samples = n)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=0)
     
