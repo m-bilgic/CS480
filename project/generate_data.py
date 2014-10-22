@@ -3,7 +3,7 @@ Created on Oct 20, 2014
 
 @author: mbilgic
 '''
-from __future__ import print_function
+#from __future__ import print_function
 
 
 from sklearn.linear_model import LogisticRegression
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     
     n = 2000
     
-    X, y = generate_binary_data(n_samples = n, n_useful = 40, n_product = 40, n_replicate = 10, n_random = 10, usefullness=(20,20))  
+    X, y = generate_binary_data(n_samples = n, n_useful = 70, n_product = 30, n_replicate = 0, n_random = 0, usefullness=(20,20))  
     #X, y = make_classification(n_samples = n)
     
     ts = 1000
@@ -81,15 +81,15 @@ if __name__ == '__main__':
     classifiers = []
     
     classifiers.append(BernoulliNB())
-    classifiers.append(LogisticRegression(C=0.1))
+    #classifiers.append(LogisticRegression(C=0.1))
     classifiers.append(LogisticRegression(C=1))
-    classifiers.append(LogisticRegression(C=10))
-    classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.0))
+    #classifiers.append(LogisticRegression(C=10))
+    #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.0))
     classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.0))
-    classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
-    classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.1))
-    classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.1))
-    classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.1))
+    #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
+    #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.1))
+    #classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.1))
+    #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.1))
     
     max_accu = 0
     the_classifier = None
@@ -102,13 +102,48 @@ if __name__ == '__main__':
         if max_accu < accu:
             max_accu = accu
             the_classifier = clf 
-        print(clf)
-        print(accu)
-        print()
+        print clf
+        print accu
+        print
     
     
-    print()
-    print()
-    print("The classifier")
-    print(the_classifier)
-    print(max_accu)
+    print
+    print
+    print "The classifier"
+    print the_classifier
+    print max_accu
+    
+    print
+    print
+    print "Modifying the labels"
+    y = the_classifier.predict(X)
+    
+    X_train = X[:ts]
+    y_train = y[:ts]
+    
+    X_test = X[ts:]
+    y_test = y[ts:]
+    
+    max_accu = 0
+    the_classifier = None
+    
+    for clf in classifiers:
+        clf.fit(X_train, y_train)
+        y_true, y_pred = y_test, clf.predict(X_test)
+       
+        accu = accuracy_score(y_true, y_pred)
+        if max_accu < accu:
+            max_accu = accu
+            the_classifier = clf 
+        print clf
+        print accu
+        print
+    
+    
+    print
+    print
+    print "The classifier"
+    print the_classifier
+    print max_accu
+    
+    
