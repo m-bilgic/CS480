@@ -77,7 +77,7 @@ if __name__ == '__main__':
     
     n = 2000
     
-    X, y = generate_binary_data(n_samples = n, n_useful = 80, n_product = 0, n_replicate = 10, n_random = 10, usefullness=(100,100))  
+    X, y = generate_binary_data(n_samples = n, n_useful = 70, n_product = 10, n_replicate = 10, n_random = 10, usefullness=(50,50))  
     #X, y = make_classification(n_samples = n)
     
     ts = 1000
@@ -91,11 +91,13 @@ if __name__ == '__main__':
     classifiers = []
     
     classifiers.append(BernoulliNB())
-    #classifiers.append(LogisticRegression(C=0.1))
-    classifiers.append(LogisticRegression(C=1))
-    #classifiers.append(LogisticRegression(C=10))
-    #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.0))
-    classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.0, probability=True))
+    classifiers.append(LogisticRegression())
+    classifiers.append(svm.SVC(probability=True))
+    classifiers.append(svm.SVC(probability=True, kernel='poly', degree=2))
+    classifiers.append(svm.SVC(probability=True, kernel='poly', degree=3))
+    classifiers.append(svm.SVC(C=100, probability=True, kernel='poly', degree=4))
+    
+    
     #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
     #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.1))
     #classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.1))
@@ -126,19 +128,14 @@ if __name__ == '__main__':
     print
     print
     print "Modifying the labels"
-    y = generate_labels(X, classifiers[1])
+    y_test = generate_labels(X[ts:], classifiers[5])  
     
-    X_train = X[:ts]
-    y_train = y[:ts]
-    
-    X_test = X[ts:]
-    y_test = y[ts:]
     
     max_accu = 0
     the_classifier = None
     
     for clf in classifiers:
-        clf.fit(X_train, y_train)
+        #clf.fit(X_train, y_train)
         y_true, y_pred = y_test, clf.predict(X_test)
        
         accu = accuracy_score(y_true, y_pred)
@@ -152,7 +149,7 @@ if __name__ == '__main__':
     
     print
     print
-    print "The classifier"
+    print "The final classifier"
     print the_classifier
     print max_accu
     
