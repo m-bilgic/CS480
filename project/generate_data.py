@@ -63,11 +63,21 @@ def generate_binary_data(n_samples = 1000, l0_prob = 0.5, n_useful = 20, usefull
       
     return X, y
 
+def generate_labels(X, classifier, l0_prob=0.5):
+    probs = classifier.predict_proba(X)
+    indices = np.argsort(probs[:,1])
+    n_samples = X.shape[0] 
+    num_l0 = int(n_samples*l0_prob)
+    y = np.zeros(n_samples, dtype=np.int)
+    y[indices[:num_l0]] = 0
+    y[indices[num_l0:]] = 1
+    return y
+
 if __name__ == '__main__':
     
     n = 2000
     
-    X, y = generate_binary_data(n_samples = n, n_useful = 70, n_product = 30, n_replicate = 0, n_random = 0, usefullness=(20,20))  
+    X, y = generate_binary_data(n_samples = n, n_useful = 80, n_product = 0, n_replicate = 10, n_random = 10, usefullness=(100,100))  
     #X, y = make_classification(n_samples = n)
     
     ts = 1000
@@ -85,7 +95,7 @@ if __name__ == '__main__':
     classifiers.append(LogisticRegression(C=1))
     #classifiers.append(LogisticRegression(C=10))
     #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.0))
-    classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.0))
+    classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.0, probability=True))
     #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
     #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.1))
     #classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.1))
@@ -116,7 +126,7 @@ if __name__ == '__main__':
     print
     print
     print "Modifying the labels"
-    y = the_classifier.predict(X)
+    y = generate_labels(X, classifiers[1])
     
     X_train = X[:ts]
     y_train = y[:ts]
