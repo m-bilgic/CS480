@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.metrics import accuracy_score
+from sklearn.datasets import make_classification
 
 import numpy as np
 
@@ -25,12 +26,12 @@ def generate_binary_data(n_samples = 1000, l0_prob = 0.5, n_useful = 20, usefull
         u_f_p[1].append(rg.beta(*usefullness))
     
     X = np.zeros((n_samples, n_features))
-    y = np.zeros(n_samples, dtype=np.int)
+    y = np.zeros(n_samples, dtype=np.int)    
     
     # useful features
     for i in range(n_samples):
         #sample a label
-        label = int(rg.rand()<l0_prob)
+        label = int(rg.rand()>l0_prob)
         y[i] = label
         
         for f in range(n_useful):
@@ -75,10 +76,16 @@ def generate_labels(X, classifier, l0_prob=0.5):
 
 if __name__ == '__main__':
     
-    n = 2000
+    n = 3000
+    l0_prob = 0.50
     
-    X, y = generate_binary_data(n_samples = n, n_useful = 70, n_product = 10, n_replicate = 10, n_random = 10, usefullness=(50,50))  
-    #X, y = make_classification(n_samples = n)
+    
+    #X, y = generate_binary_data(n_samples = n, l0_prob = l0_prob, n_useful = 40, n_product = 20, n_replicate = 20, n_random = 20, usefullness=(50,50))  
+    seed = 7
+    X, y = make_classification(class_sep=.5, n_samples = n, n_features = 20, n_informative = 3, n_redundant = 2, n_repeated = 2, weights=[l0_prob, 1-l0_prob], random_state=seed)
+        
+
+    
     
     ts = 1000
     
@@ -91,11 +98,11 @@ if __name__ == '__main__':
     classifiers = []
     
     classifiers.append(BernoulliNB())
-    classifiers.append(LogisticRegression())
-    classifiers.append(svm.SVC(probability=True))
-    classifiers.append(svm.SVC(probability=True, kernel='poly', degree=2))
-    classifiers.append(svm.SVC(probability=True, kernel='poly', degree=3))
-    classifiers.append(svm.SVC(C=100, probability=True, kernel='poly', degree=4))
+    classifiers.append(LogisticRegression(C=1))
+    classifiers.append(svm.SVC(C=1, probability=True))
+    classifiers.append(svm.SVC(C=1, probability=True, kernel='poly'))
+    #classifiers.append(svm.SVC(probability=True, kernel='poly', degree=3))
+    #classifiers.append(svm.SVC(C=100, probability=True, kernel='poly', degree=4))
     
     
     #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
@@ -128,7 +135,28 @@ if __name__ == '__main__':
     print
     print
     print "Modifying the labels"
-    y_test = generate_labels(X[ts:], classifiers[5])  
+    
+    # Modify only the test labels
+    y_test = generate_labels(X[ts:], classifiers[3], l0_prob=l0_prob)
+    
+    #print np.sum(y_test)
+    
+    # Modify both the train and test labels
+    #y_new = generate_labels(X, classifiers[3], l0_prob=l0_prob)
+    #print np.sum(y != y_new)
+    #exit(0)
+    #y_train = y_new[:ts]
+    #y_test = y_new[ts:]
+    
+    #print np.sum(y_train), np.sum(y_test)
+    #exit(0)
+    
+    #classifiers = []
+    
+    #classifiers.append(BernoulliNB())
+    #classifiers.append(LogisticRegression(C=1))
+    #classifiers.append(svm.SVC(C=1, probability=True))
+    #classifiers.append(svm.SVC(C=1, probability=True, kernel='poly'))
     
     
     max_accu = 0
@@ -151,6 +179,17 @@ if __name__ == '__main__':
     print
     print "The final classifier"
     print the_classifier
-    print max_accu
+    print max_accu    
+    
+    #exit(0)
+    
+    np.savetxt("dataset5_X_train.csv", X[:ts], delimiter=',', fmt='%0.5f')
+    np.savetxt("dataset5_X_val.csv", X[ts:2*ts], delimiter=',', fmt='%0.5f')
+    np.savetxt("dataset5_X_test.csv", X[2*ts:], delimiter=',', fmt='%0.5f')
+    
+    np.savetxt("dataset5_y_train.csv", y[:ts], delimiter=',', fmt='%d')
+    np.savetxt("dataset5_y_val.csv", y_test[:ts], delimiter=',', fmt='%d')
+    np.savetxt("dataset5_y_test.csv", y_test[ts:], delimiter=',', fmt='%d')
+    
     
     

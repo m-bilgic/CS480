@@ -3,7 +3,7 @@ Simulate agents - Phase 1
 '''
 
 import numpy as np
-from agents import HalfProbAgent, RatioAgent, BuyAllAgent
+from project.phase1.agents import HalfProbAgent, RatioAgent, BuyAllAgent
 
 def simulate_agents(agents, value, num_products, alpha, beta, seed=None):
     
