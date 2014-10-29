@@ -59,11 +59,12 @@ if __name__ == '__main__':
     for agent in agents:
         agent.fit_a_classifier(X_train, y_train, X_val, y_val)
     
+    # Simulate the agents
     value = 1000
     agent_wealths = simulate_agents(agents, value, X_val, y_val)
     
     print "-" * 50
-    print "SIMULATION ON THE VALIDATION DATA"
+    print "SIMULATION RESULTS ON THE VALIDATION DATA"
     print "-" * 50
     
     for agent in agents:

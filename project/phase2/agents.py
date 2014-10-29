@@ -2,6 +2,8 @@
 The agent base class as well as the baseline agents.
 '''
 
+from sklearn.naive_bayes import BernoulliNB
+
 def abstract():
     import inspect
     caller = inspect.getouterframes(inspect.currentframe())[1][3]
@@ -16,12 +18,18 @@ class Agent(object):
         return "Agent_" + self.name
     
     def will_buy(self, value, price, prob):
+        "The rational agent. Do not change this."
         return value*prob > price
     
     def fit_a_classifier(self, X_train, y_train, X_validation, y_validation):
+        """Find and fit the best classifier.
+        The classifier must be a sklearn classifier.
+        This method must set the self.classifier variable to the fitted classifier.
+        The classifier must be able to predict probabilities."""
         abstract()
     
     def predict_prob_of_good(self, x):
+        "Predict the probability of being Good (i.e., label 1). Do not change this."
         return self.classifier.predict_proba(x)[0][1]
     
 
@@ -41,34 +49,13 @@ class RatioAgent(Agent):
     def will_buy(self, value, price, prob):
         return (float(price)/value <= self.max_p_v_ratio)
 
-from sklearn.naive_bayes import BernoulliNB
+
 
 class NaiveBayesAgent(Agent):
     
     def fit_a_classifier(self, X_train, y_train, X_validation, y_validation):
+        "This agent assumes that BernoulliNB is the best classifier."
         self.classifier = BernoulliNB()
-        self.classifier.fit(X_train, y_train)
-
-from sklearn.linear_model import LogisticRegression
-
-class LRAgent(Agent):
-    
-    def fit_a_classifier(self, X_train, y_train, X_validation, y_validation):
-        self.classifier = LogisticRegression()
-        self.classifier.fit(X_train, y_train)
-
-from sklearn.svm import SVC
-
-class RBFAgent(Agent):
-    
-    def fit_a_classifier(self, X_train, y_train, X_validation, y_validation):
-        self.classifier = SVC(C=1, probability=True)
-        self.classifier.fit(X_train, y_train)
-        
-class PolyAgent(Agent):
-    
-    def fit_a_classifier(self, X_train, y_train, X_validation, y_validation):
-        self.classifier = SVC(C=1, probability=True, kernel='poly')
         self.classifier.fit(X_train, y_train)
 
 
