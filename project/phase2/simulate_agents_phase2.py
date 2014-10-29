@@ -1,54 +1,49 @@
 import sys
 import numpy as np
 
-from agents import RatioAgent, NaiveBayesAgent, LRAgent, RBFAgent, PolyAgent
+from agents import RatioAgent, NaiveBayesAgent
 
-def simulate_agents(agents, value, X, y, seed=None):
+def simulate_agents(agents, value, X, y, price_trials = 10):
     
     agent_wealths = {}
     
     for agent in agents:
         agent_wealths[agent] = 0
     
-    if seed:
-        np.random.seed(seed)
+    num_products = X.shape[0]
     
-    num_products = X_val.shape[0]
-    
-    for p in range(num_products):
-        # price is always lower than or equal to the value
-        price = np.random.rand()*value
-         
+    for p in range(num_products):        
+        
         # working or not?
         working = (y[p] == 1)
         
         for agent in agents:
-            if agent.will_buy(value, price, agent.predict_prob_of_good(X[p])):
-                agent_wealths[agent] -= price
-                if working:
-                    agent_wealths[agent] += value
-    
+            prob = agent.predict_prob_of_good(X[p])
+            # try a range of prices            
+            for pt in range(price_trials):                            
+                price = ((2*pt+1)*value)/(2*price_trials)                                
+                if agent.will_buy(value, price, prob):
+                    agent_wealths[agent] -= price
+                    if working:
+                        agent_wealths[agent] += value
     return agent_wealths
 
-if __name__ == '__main__': 
-    #print len(sys.argv)
-    #print sys.argv[0]
+if __name__ == '__main__':
     data_path = "./"
-    data_group = "dataset5"
+    data_group = "dataset1"
+    # if you like, you can read the data_path and data_group using sys.argv
     
     X_train_file = data_path + data_group +  "_X_train.csv"
     y_train_file = data_path + data_group + "_y_train.csv"   
     X_val_file = data_path + data_group + "_X_val.csv"
     y_val_file = data_path + data_group + "_y_val.csv"
     X_test_file = data_path + data_group + "_X_test.csv"
-    y_test_file = data_path + data_group + "_y_test.csv"
     
     X_train = np.loadtxt(X_train_file, dtype=float, delimiter=',')
     y_train = np.loadtxt(y_train_file, dtype=int, delimiter=',')
     X_val = np.loadtxt(X_val_file, dtype=float, delimiter=',')
     y_val = np.loadtxt(y_val_file, dtype=int, delimiter=',')
     X_test = np.loadtxt(X_test_file, dtype=float, delimiter=',')
-    y_test = np.loadtxt(y_test_file, dtype=int, delimiter=',')
     
     agents = []
     
@@ -57,9 +52,8 @@ if __name__ == '__main__':
     agents.append(RatioAgent("ratio_0.50", 0.5))
     agents.append(RatioAgent("ratio_0.25", 0.25))
     agents.append(NaiveBayesAgent("nb"))
-    agents.append(LRAgent("lr"))
-    agents.append(RBFAgent("rbf"))
-    agents.append(PolyAgent("poly"))
+    # Append your agent
+    #agents.append(...)
     
     # Train the agents
     for agent in agents:
@@ -68,8 +62,22 @@ if __name__ == '__main__':
     value = 1000
     agent_wealths = simulate_agents(agents, value, X_val, y_val)
     
+    print "-" * 50
+    print "SIMULATION ON THE VALIDATION DATA"
+    print "-" * 50
+    
     for agent in agents:
         print "{}:\t\t${:,.2f}".format(agent, agent_wealths[agent])
     
+    print
+    print "-" * 50
+    print "PREDICTED PROBABILITIES ON THE TEST DATA"
+    print "-" * 50
+    
+    student_agent = None # CHANGE THIS WITH YOUR AGENT
+    
+    for i in range(X_test.shape[0]):
+        prob = student_agent.predict_prob_of_good(X_test[i])
+        print prob
     
     

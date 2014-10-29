@@ -39,7 +39,7 @@ class RatioAgent(Agent):
         return 0
     
     def will_buy(self, value, price, prob):
-        return (price/value <= self.max_p_v_ratio)
+        return (float(price)/value <= self.max_p_v_ratio)
 
 from sklearn.naive_bayes import BernoulliNB
 

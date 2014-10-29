@@ -77,14 +77,23 @@ def generate_labels(X, classifier, l0_prob=0.5):
 if __name__ == '__main__':
     
     n = 3000
-    l0_prob = 0.50
+    l0_prob = 0.75
     
     
     #X, y = generate_binary_data(n_samples = n, l0_prob = l0_prob, n_useful = 40, n_product = 20, n_replicate = 20, n_random = 20, usefullness=(50,50))  
-    seed = 7
-    X, y = make_classification(class_sep=.5, n_samples = n, n_features = 20, n_informative = 3, n_redundant = 2, n_repeated = 2, weights=[l0_prob, 1-l0_prob], random_state=seed)
-        
-
+    seed = 12
+    preferred_clf = 3
+    save = True
+    dataset = 12
+    
+    X, y = make_classification(class_sep=.5, n_samples = n, n_features = 20, n_informative = 10, n_redundant = 2, n_repeated = 2, n_clusters_per_class = 3, weights=[l0_prob, 1-l0_prob], random_state=seed)
+    
+    classifiers = []
+    
+    classifiers.append(BernoulliNB())
+    classifiers.append(LogisticRegression(C=1))
+    classifiers.append(svm.SVC(C=1, probability=True))
+    classifiers.append(svm.SVC(C=1, probability=True, kernel='poly'))
     
     
     ts = 1000
@@ -95,20 +104,6 @@ if __name__ == '__main__':
     X_test = X[ts:]
     y_test = y[ts:]
     
-    classifiers = []
-    
-    classifiers.append(BernoulliNB())
-    classifiers.append(LogisticRegression(C=1))
-    classifiers.append(svm.SVC(C=1, probability=True))
-    classifiers.append(svm.SVC(C=1, probability=True, kernel='poly'))
-    #classifiers.append(svm.SVC(probability=True, kernel='poly', degree=3))
-    #classifiers.append(svm.SVC(C=100, probability=True, kernel='poly', degree=4))
-    
-    
-    #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.0))
-    #classifiers.append(svm.SVC(kernel='rbf', C=0.1, gamma=0.1))
-    #classifiers.append(svm.SVC(kernel='rbf', C=1, gamma=0.1))
-    #classifiers.append(svm.SVC(kernel='rbf', C=10, gamma=0.1))
     
     max_accu = 0
     the_classifier = None
@@ -137,7 +132,34 @@ if __name__ == '__main__':
     print "Modifying the labels"
     
     # Modify only the test labels
-    y_test = generate_labels(X[ts:], classifiers[3], l0_prob=l0_prob)
+    y_test = generate_labels(X[ts:], classifiers[preferred_clf], l0_prob=l0_prob)
+    
+    from agents import RatioAgent, NaiveBayesAgent, LRAgent, RBFAgent, PolyAgent
+    from simulate_agents_phase2 import simulate_agents
+    
+    agents = []
+    
+    
+    agents.append(RatioAgent("ratio_0.75", 0.75))
+    agents.append(RatioAgent("ratio_0.50", 0.5))
+    agents.append(RatioAgent("ratio_0.25", 0.25))
+    agents.append(NaiveBayesAgent("nb"))
+    agents.append(LRAgent("lr"))
+    agents.append(RBFAgent("rbf"))
+    agents.append(PolyAgent("poly"))
+    
+    X_val = X[ts:2*ts]
+    y_val = y_test[:ts]
+    
+    # Train the agents
+    for agent in agents:
+        agent.fit_a_classifier(X_train, y_train, X_val, y_val)
+    
+    value = 1000
+    agent_wealths = simulate_agents(agents, value, X_val, y_val)
+    
+    for agent in agents:
+        print "{}:\t\t${:,.2f}".format(agent, agent_wealths[agent])
     
     #print np.sum(y_test)
     
@@ -159,19 +181,25 @@ if __name__ == '__main__':
     #classifiers.append(svm.SVC(C=1, probability=True, kernel='poly'))
     
     
+    min_error = X_test.shape[0]
+    
     max_accu = 0
     the_classifier = None
     
     for clf in classifiers:
         #clf.fit(X_train, y_train)
-        y_true, y_pred = y_test, clf.predict(X_test)
-       
-        accu = accuracy_score(y_true, y_pred)
-        if max_accu < accu:
-            max_accu = accu
+        
+        probs = clf.predict_proba(X_test)
+        
+        error = 0
+        for i in range(X_test.shape[0]):
+            error += (1 - probs[i][y_test[i]])
+        
+        if min_error > error:
+            min_error = error
             the_classifier = clf 
         print clf
-        print accu
+        print error
         print
     
     
@@ -179,17 +207,20 @@ if __name__ == '__main__':
     print
     print "The final classifier"
     print the_classifier
-    print max_accu    
+    print min_error    
     
-    #exit(0)
-    
-    np.savetxt("dataset5_X_train.csv", X[:ts], delimiter=',', fmt='%0.5f')
-    np.savetxt("dataset5_X_val.csv", X[ts:2*ts], delimiter=',', fmt='%0.5f')
-    np.savetxt("dataset5_X_test.csv", X[2*ts:], delimiter=',', fmt='%0.5f')
-    
-    np.savetxt("dataset5_y_train.csv", y[:ts], delimiter=',', fmt='%d')
-    np.savetxt("dataset5_y_val.csv", y_test[:ts], delimiter=',', fmt='%d')
-    np.savetxt("dataset5_y_test.csv", y_test[ts:], delimiter=',', fmt='%d')
+    if save:
+        print "Saving dataset: %d" %dataset
+        
+        dataset = str(dataset)
+            
+        np.savetxt("dataset"+dataset+"_X_train.csv", X[:ts], delimiter=',', fmt='%0.5f')
+        np.savetxt("dataset"+dataset+"_X_val.csv", X[ts:2*ts], delimiter=',', fmt='%0.5f')
+        np.savetxt("dataset"+dataset+"_X_test.csv", X[2*ts:], delimiter=',', fmt='%0.5f')
+        
+        np.savetxt("dataset"+dataset+"_y_train.csv", y[:ts], delimiter=',', fmt='%d')
+        np.savetxt("dataset"+dataset+"_y_val.csv", y_test[:ts], delimiter=',', fmt='%d')
+        np.savetxt("dataset"+dataset+"_y_test.csv", y_test[ts:], delimiter=',', fmt='%d')
     
     
     
