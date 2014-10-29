@@ -75,7 +75,7 @@ if __name__ == '__main__':
     print "PREDICTED PROBABILITIES ON THE TEST DATA"
     print "-" * 50
     
-    student_agent = None # CHANGE THIS WITH YOUR AGENT
+    student_agent = agents[4]
     
     for i in range(X_test.shape[0]):
         prob = student_agent.predict_prob_of_good(X_test[i])
