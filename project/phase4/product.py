@@ -12,4 +12,7 @@ class Product(object):
         self.features = features
         self.value = value
         self.price = price
+    
+    def __repr__(self):
+        return "Product[v=" + str(self.value) + ", p=" + str(self.price) +"]"
         
