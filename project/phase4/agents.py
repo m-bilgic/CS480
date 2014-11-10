@@ -54,15 +54,17 @@ class LearningAgent(Agent):
     def __init__(self, name):
         self.name = name
         self.my_products = []
-        self.product_labels = []    
+        self.product_labels = []
+        self.rs = np.random.RandomState(0)
     
     def __repr__(self):
         return "Agent_" + self.name
     
     def choose_one_product(self, products):
+        candidates = self.rs.permutation(len(products))
         max_exp_profit = 0
         chosen = -1
-        for i in range(len(products)):
+        for i in candidates[:100]:
             product = products[i]
             prob_good = self.clf.predict_proba(product.features)[0][1]
             exp_profit = prob_good*product.value - product.price
