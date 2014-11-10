@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 
-from agents import CheapAgent, RandomAgent
+from agents import CheapAgent, RandomAgent, LearningAgent
 from product import Product
 
 if __name__ == '__main__':
@@ -23,7 +23,8 @@ if __name__ == '__main__':
         products.append(Product(X[i], value, prices[i]))
     
     #agent = CheapAgent("cheap")
-    agent = RandomAgent("random")
+    #agent = RandomAgent("random")
+    agent = LearningAgent("learningAgent")
     
     agent_wealth = 0
     
