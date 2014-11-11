@@ -48,6 +48,8 @@ class RandomAgent(Agent):
         return self.rg.choice(len(products))
 
 from sklearn.naive_bayes import BernoulliNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 
 class LearningAgent(Agent):
     
@@ -56,21 +58,30 @@ class LearningAgent(Agent):
         self.my_products = []
         self.product_labels = []
         self.rs = np.random.RandomState(0)
+        self.unc = 0
     
     def __repr__(self):
         return "Agent_" + self.name
     
     def choose_one_product(self, products):
         candidates = self.rs.permutation(len(products))
+        max_unc = 1        
         max_exp_profit = 0
         chosen = -1
         for i in candidates[:100]:
             product = products[i]
             prob_good = self.clf.predict_proba(product.features)[0][1]
-            exp_profit = prob_good*product.value - product.price
-            if max_exp_profit < exp_profit:
-                max_exp_profit = exp_profit 
-                chosen = i
+            if self.unc > 0:
+                unc = abs(prob_good - 0.5)
+                if max_unc > unc:
+                    max_unc = unc
+                    chosen = i
+                self.unc -= 1
+            else:
+                exp_profit = prob_good*product.value - product.price
+                if max_exp_profit < exp_profit:
+                    max_exp_profit = exp_profit 
+                    chosen = i
         if chosen != -1:
             return chosen
         else:
@@ -88,4 +99,6 @@ class LearningAgent(Agent):
         
         if len(self.y) > 1:
             self.clf = BernoulliNB()
+            #self.clf = LogisticRegression()
+            #self.clf = KNeighborsClassifier()
             self.clf.fit(self.X, self.y)

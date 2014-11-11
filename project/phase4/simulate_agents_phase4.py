@@ -6,7 +6,7 @@ from product import Product
 
 if __name__ == '__main__':
     data_path = "./"
-    data_group = "dataset1"
+    data_group = "dataset8"
     # if you like, you can read the data_path and data_group using sys.argv
     
     X = np.loadtxt(data_path + data_group +  "_X.csv", dtype=float, delimiter=',') # features
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         chosen = agent.choose_one_product(products)
         agent.add_to_my_products(products[chosen], y[chosen])
         
-        print "Agent %s chose %s" %(agent, products[chosen])
+        #print "Agent %s chose %s" %(agent, products[chosen])
         
         agent_wealth -= products[chosen].price
         
@@ -76,6 +76,8 @@ if __name__ == '__main__':
         y = np.delete(y, chosen)
     
     print "Agent %s's final wealth: %d" %(agent, agent_wealth)
+    
+    print "Agent has %d good products." %(np.sum(agent.product_labels))
         
 
     
