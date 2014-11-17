@@ -29,7 +29,7 @@ if __name__ == '__main__':
     X = X[rnd_indices]
     y = y[rnd_indices]
     
-    value = 100
+    value = 1000.
     
     n = X.shape[0]
     

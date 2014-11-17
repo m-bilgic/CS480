@@ -1,19 +1,19 @@
 import sys
 import numpy as np
 
-from agents import CheapAgent, RandomAgent, LearningAgent
+from agents import CheapAgent, RandomAgent
 from product import Product
 
 if __name__ == '__main__':
     data_path = "./"
-    data_group = "dataset8"
+    data_group = "dataset1"
     # if you like, you can read the data_path and data_group using sys.argv
     
     X = np.loadtxt(data_path + data_group +  "_X.csv", dtype=float, delimiter=',') # features
     y = np.loadtxt(data_path + data_group +  "_y.csv", dtype=int) # bad (0) or good (1)
     prices = np.loadtxt(data_path + data_group +  "_p.csv", dtype=float) # prices
 
-    value = 100
+    value = 1000.
     
     num_products = X.shape[0]
     
@@ -23,10 +23,11 @@ if __name__ == '__main__':
         products.append(Product(X[i], value, prices[i]))
     
     #agent = CheapAgent("cheap")
-    #agent = RandomAgent("random")
-    agent = LearningAgent("learningAgent")
+    agent = RandomAgent("random")
     
     agent_wealth = 0
+    
+    num_good_products_agent_has = 0
     
     # We'll gift you two random products, we'll give them to you for free
     
@@ -41,6 +42,7 @@ if __name__ == '__main__':
     products[chosen].price = 0 # it's our gift to you
     
     agent.add_to_my_products(products[chosen], 1)
+    num_good_products_agent_has += 1
     
     agent_wealth += products[chosen].value
     
@@ -71,13 +73,15 @@ if __name__ == '__main__':
         
         if y[chosen] == 1: # a good product
             agent_wealth += products[chosen].value
+            num_good_products_agent_has += 1
         
         del products[chosen]
         y = np.delete(y, chosen)
     
-    print "Agent %s's final wealth: %d" %(agent, agent_wealth)
     
-    print "Agent has %d good products." %(np.sum(agent.product_labels))
+    print "{}'s final wealth:\t${:,.2f}".format(agent, agent_wealth)
+    
+    print "%s has %d good products." %(agent, num_good_products_agent_has)
         
 
     
