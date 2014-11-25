@@ -1,5 +1,7 @@
 '''
-Created on Nov 19, 2014
+Logistic regression implementation done in class.
+Warning: this is for illustration purposes only and
+it is not necessarily the most efficient implementation.
 '''
 
 import numpy as np
