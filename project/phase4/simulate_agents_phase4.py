@@ -3,10 +3,11 @@ import numpy as np
 
 from agents import CheapAgent, RandomAgent
 from product import Product
+from single_classifier_agent import ClassifierAgent
 
 if __name__ == '__main__':
     data_path = "./"
-    data_group = "dataset1"
+    data_group = "dataset12"
     # if you like, you can read the data_path and data_group using sys.argv
     
     X = np.loadtxt(data_path + data_group +  "_X.csv", dtype=float, delimiter=',') # features
@@ -22,8 +23,13 @@ if __name__ == '__main__':
     for i in range(num_products):
         products.append(Product(X[i], value, prices[i]))
     
-    #agent = CheapAgent("cheap")
-    agent = RandomAgent("random")
+    agent = CheapAgent("cheap")
+    #agent = RandomAgent("random")
+    #agent = ClassifierAgent("bnb", "sklearn.naive_bayes.BernoulliNB")
+    #agent = ClassifierAgent("gnb", "sklearn.naive_bayes.GaussianNB")
+    #agent = ClassifierAgent("lr", "sklearn.linear_model.LogisticRegression")
+    #agent = ClassifierAgent("knn", "sklearn.neighbors.KNeighborsClassifier")
+    #agent = ClassifierAgent("dt", "sklearn.tree.DecisionTreeClassifier")
     
     agent_wealth = 0
     

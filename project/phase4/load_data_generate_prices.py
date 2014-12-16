@@ -10,7 +10,7 @@ from sklearn.datasets import dump_svmlight_file
 if __name__ == '__main__':
     
     data_path = './../phase2/'
-    data_group = "dataset8"
+    data_group = "dataset11"
     seed = 0
     save = True
     
@@ -21,6 +21,12 @@ if __name__ == '__main__':
     
     X = np.vstack((X_tr, X_val))
     y = np.hstack((y_tr, y_val))
+    
+    print X.shape
+    print y.shape
+    print np.sum(y)
+    
+    #exit(0)
     
     rs = np.random.RandomState(seed)
     
